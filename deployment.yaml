@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-video-analysis
+spec:
+  replicas: 2  # Number of pods
+  selector:
+    matchLabels:
+      app: fastapi-video-analysis
+  template:
+    metadata:
+      labels:
+        app: fastapi-video-analysis
+    spec:
+      containers:
+      - name: fastapi-video-analysis
+        image: dockersmnt/fastapi-video-analysis:latest
+        ports:
+        - containerPort: 8000
