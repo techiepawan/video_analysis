@@ -15,11 +15,15 @@ SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Fake database
-fake_users_db = {}
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Fake database
+fake_users_db = {
+    "admin": {"username": "admin", "password": pwd_context.hash("admin123"), "role": "admin"},
+    "user": {"username": "user", "password": pwd_context.hash("user123"), "role": "user"}
+}
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
