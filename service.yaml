@@ -9,4 +9,4 @@ spec:
     - protocol: TCP
       port: 80  # External port
       targetPort: 8000  # Port in container
-  type: ClusterIP  # Change to LoadBalancer for external access
+  type: LoadBalancer  # Change to LoadBalancer for external access
