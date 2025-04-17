@@ -1,0 +1,51 @@
+pipeline{
+    agent any
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '10', numToKeepStr: '10')
+    }
+    environment{
+        cred = credentials('aws-key')
+        dockerhub_cred = credentials('docker-cred')
+        DOCKER_IMAGE = "techiepawan/python_video_analysis"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        PATH = "/opt/homebrew/bin:$PATH"
+
+    }
+    stages{
+        stage('Checking out the code from GitHub'){
+            steps{
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/techiepawan/video_analysis.git']])
+            }
+        }
+        stage('Python Build'){
+            steps{
+                // sh 'pip3 install -r requirements.txt'
+                sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+        stage('Docker Build'){
+            steps{
+                sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
+            }
+        }
+        stage('Push the docker image to Docker Hub'){
+            steps{
+                sh "echo $dockerhub_cred_PSW | docker login -u \$dockerhub_cred_USR --password-stdin"
+                sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                sh "docker push ${DOCKER_IMAGE}:latest"
+                }
+        }
+        stage('Deploy the image to kubernetes'){
+            steps{
+                sh 'aws eks update-kubeconfig --region us-east-1 --name devops-working'
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
+            }
+        }
+    }
+}
